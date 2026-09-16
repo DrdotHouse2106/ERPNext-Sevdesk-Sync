@@ -69,10 +69,34 @@ Nach der Installation in ERPNext unter **SevDesk Sync Settings** (Single-DocType
 | Trockenlauf                          | Wenn aktiviert, wird bei jedem Sync (auch dem geplanten) nur simuliert/geloggt, nichts in sevDesk geschrieben oder angelegt |
 | Letzte Synchronisierung am / Zusammenfassung | Read-only, wird nach jedem echten Lauf automatisch aktualisiert (nicht beim manuellen Trockenlauf-Button) |
 
-Oben auf der Settings-Seite gibt es zwei Buttons:
+Oben auf der Settings-Seite gibt es drei Buttons:
 
 - **Verbindung testen** — prüft, ob sevDesk-API-Basis-URL und Token funktionieren, ohne etwas zu ändern.
-- **Trockenlauf starten** — führt den Sync sofort im Trockenlauf-Modus aus (unabhängig vom Trockenlauf-Häkchen) und zeigt das Ergebnis direkt an.
+- **Trockenlauf starten** — führt den Sync sofort im Trockenlauf-Modus aus (unabhängig vom Trockenlauf-Häkchen), schreibt/legt nichts in sevDesk an, und zeigt das Ergebnis direkt an.
+- **Jetzt synchronisieren** — führt den echten Sync sofort aus (mit Sicherheitsabfrage, da dabei tatsächlich in sevDesk geschrieben bzw. angelegt wird).
+
+Beide Buttons zeigen nach dem Lauf eine Zusammenfassung sowie einen Link zum
+zugehörigen **SevDesk Sync Log**-Eintrag (siehe unten) mit der vollständigen Liste.
+
+### Trockenlauf-Häkchen vs. „Trockenlauf starten"-Button
+
+Das Häkchen wirkt auf den **täglichen automatischen** Sync (Scheduler) — damit kann
+die Automatik dauerhaft im Simulationsmodus laufen (z. B. während der Testphase),
+ohne dass man jeden Tag manuell eingreifen muss. Der Button „Trockenlauf starten"
+ist dagegen ein einmaliger, sofortiger Test unabhängig vom Häkchen — beide sind also
+für unterschiedliche Situationen gedacht und schließen sich nicht aus.
+
+## Übersicht der Änderungen (SevDesk Sync Log)
+
+Jeder Lauf (geplant, Trockenlauf oder manuell über „Jetzt synchronisieren") erzeugt
+einen Eintrag im DocType **SevDesk Sync Log** mit Zeitpunkt, Zähler
+(angelegt/aktualisiert/bereits synchron/übersprungen) und Zusammenfassung. Über den
+Link „Details ansehen" bzw. direkt in ERPNext gelangt man zu den zugehörigen
+**SevDesk Sync Log Item**-Zeilen — einer Zeile pro angelegtem, aktualisiertem oder
+übersprungenem (mit Grund) Artikel. Das ist eine normale ERPNext-Listenansicht:
+filter-, sortier- und exportierbar (z. B. nach Excel). Artikel, die bereits synchron
+waren, werden dort nicht einzeln aufgeführt (nur als Zähler im Log-Kopf), um die
+Tabelle bei großen Katalogen nicht unnötig aufzublähen.
 
 ## Nutzung
 

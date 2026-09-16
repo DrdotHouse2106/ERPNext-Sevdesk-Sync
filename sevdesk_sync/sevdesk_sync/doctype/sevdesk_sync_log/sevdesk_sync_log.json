@@ -1,0 +1,105 @@
+{
+ "actions": [],
+ "autoname": "SDSL-.#####",
+ "creation": "2026-09-16 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "sync_time",
+  "dry_run",
+  "column_break_1",
+  "created_count",
+  "updated_count",
+  "unchanged_count",
+  "skipped_count",
+  "summary"
+ ],
+ "fields": [
+  {
+   "fieldname": "sync_time",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Zeitpunkt",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "dry_run",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Trockenlauf",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "created_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Angelegt",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "updated_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Aktualisiert",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "unchanged_count",
+   "fieldtype": "Int",
+   "label": "Bereits synchron",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "skipped_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Übersprungen",
+   "read_only": 1
+  },
+  {
+   "fieldname": "summary",
+   "fieldtype": "Small Text",
+   "label": "Zusammenfassung",
+   "read_only": 1
+  }
+ ],
+ "links": [
+  {
+   "group": "Details",
+   "link_doctype": "SevDesk Sync Log Item",
+   "link_fieldname": "sync_log"
+  }
+ ],
+ "modified": "2026-09-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SevDesk Sync",
+ "name": "SevDesk Sync Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "sync_time",
+ "sort_order": "DESC",
+ "title_field": "sync_time",
+ "track_changes": 0
+}

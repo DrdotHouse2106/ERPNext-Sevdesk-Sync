@@ -24,10 +24,11 @@ DEFAULT_PRICE_TOLERANCE = 0.005
 @dataclasses.dataclass(frozen=True)
 class SyncResult:
     item_code: str
-    net_price: float
-    gross_price: float
-    tax_rate: float
-    action: str  # "created", "updated", or "unchanged"
+    net_price: Optional[float]
+    gross_price: Optional[float]
+    tax_rate: Optional[float]
+    action: str  # "created", "updated", "unchanged", or "skipped"
+    reason: str = ""  # set (in German, for display) when action == "skipped"
 
 
 def net_to_gross(net_price: float, tax_rate: float) -> float:
@@ -57,12 +58,15 @@ def sync_prices(
       gross price and its price fields are updated if they differ.
     - If no matching part exists, a new one is created using
       ``default_tax_rate`` and ``default_unity_id`` (both required for
-      creation; the item is skipped with a warning if either is missing).
+      creation; the item is skipped if either is missing).
+
+    Every ERPNext item produces exactly one ``SyncResult``, including skipped
+    ones (with ``action="skipped"`` and a human-readable ``reason``), so
+    callers can build a full report of a run.
     """
     sevdesk_parts = sevdesk_client.get_parts_by_number()
 
     results: List[SyncResult] = []
-    skipped: List[str] = []
 
     for item_code, item in erpnext_items.items():
         net_price = float(item["gross_price"])
@@ -78,7 +82,19 @@ def sync_prices(
                     "default tax rate configured",
                     item_code,
                 )
-                skipped.append(item_code)
+                results.append(
+                    SyncResult(
+                        item_code,
+                        net_price,
+                        None,
+                        None,
+                        "skipped",
+                        reason=(
+                            "Kein Steuersatz am sevDesk-Artikel und kein "
+                            "Standard-Steuersatz konfiguriert"
+                        ),
+                    )
+                )
                 continue
             tax_rate = float(tax_rate)
             gross_price = net_to_gross(net_price, tax_rate)
@@ -130,7 +146,19 @@ def sync_prices(
                 "rate configured to create one",
                 item_code,
             )
-            skipped.append(item_code)
+            results.append(
+                SyncResult(
+                    item_code,
+                    net_price,
+                    None,
+                    None,
+                    "skipped",
+                    reason=(
+                        "Kein passender sevDesk-Artikel und kein "
+                        "Standard-Steuersatz zum Anlegen konfiguriert"
+                    ),
+                )
+            )
             continue
         if not default_unity_id:
             logger.warning(
@@ -138,7 +166,19 @@ def sync_prices(
                 "configured to create one",
                 item_code,
             )
-            skipped.append(item_code)
+            results.append(
+                SyncResult(
+                    item_code,
+                    net_price,
+                    None,
+                    None,
+                    "skipped",
+                    reason=(
+                        "Kein passender sevDesk-Artikel und keine "
+                        "sevDesk-Standardeinheit zum Anlegen konfiguriert"
+                    ),
+                )
+            )
             continue
 
         tax_rate = float(default_tax_rate)
@@ -170,12 +210,12 @@ def sync_prices(
             )
         results.append(SyncResult(item_code, net_price, gross_price, tax_rate, "created"))
 
-    if skipped:
+    skipped_count = sum(1 for result in results if result.action == "skipped")
+    if skipped_count:
         logger.warning(
-            "%d ERPNext item(s) skipped (missing tax rate/unity to create, "
-            "see warnings above): %s",
-            len(skipped),
-            ", ".join(sorted(skipped)),
+            "%d ERPNext item(s) skipped (missing tax rate/unity, see warnings above): %s",
+            skipped_count,
+            ", ".join(sorted(r.item_code for r in results if r.action == "skipped")),
         )
 
     return results

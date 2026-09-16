@@ -92,7 +92,9 @@ class SyncPricesUpdateTests(unittest.TestCase):
 
         results = sync_prices({"ITEM-1": erpnext_item(100.0)}, sevdesk)
 
-        self.assertEqual(results, [])
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].action, "skipped")
+        self.assertTrue(results[0].reason)
         self.assertEqual(sevdesk.updates, [])
 
 
@@ -139,7 +141,9 @@ class SyncPricesCreateTests(unittest.TestCase):
         )
 
         self.assertEqual(sevdesk.creates, [])
-        self.assertEqual(results, [])
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].action, "skipped")
+        self.assertTrue(results[0].reason)
 
     def test_skips_creation_without_default_unity_id(self):
         sevdesk = FakeSevDeskClient({})
@@ -149,7 +153,9 @@ class SyncPricesCreateTests(unittest.TestCase):
         )
 
         self.assertEqual(sevdesk.creates, [])
-        self.assertEqual(results, [])
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].action, "skipped")
+        self.assertTrue(results[0].reason)
 
     def test_uses_item_code_as_name_fallback(self):
         sevdesk = FakeSevDeskClient({})
