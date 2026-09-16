@@ -37,8 +37,18 @@ separaten API-Zugangsdaten für ERPNext nötig.
 
 ## Installation in ERPNext (bench)
 
+Direkt von GitHub:
+
 ```bash
-bench get-app sevdesk_sync /pfad/zu/ERPNext-Sevdesk-Sync/sevdesk_sync
+bench get-app https://github.com/DrdotHouse2106/ERPNext-Sevdesk-Sync
+bench --site <site-name> install-app sevdesk_sync
+bench --site <site-name> migrate
+```
+
+Oder von einem bereits lokal geklonten Repo:
+
+```bash
+bench get-app sevdesk_sync /pfad/zu/ERPNext-Sevdesk-Sync
 bench --site <site-name> install-app sevdesk_sync
 bench --site <site-name> migrate
 ```
@@ -77,7 +87,7 @@ Python und lässt sich ohne laufende Bench-/ERPNext-Instanz testen. Für
 `erpnext_source.py` wird `frappe` dabei durch ein minimales Fake-Modul ersetzt.
 
 ```bash
-PYTHONPATH=sevdesk_sync python3 -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -v
 ```
 
 `sevdesk_sync_settings.py` (die DocType-Controller-Klasse) benötigt hingegen eine
