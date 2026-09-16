@@ -9,6 +9,10 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+#: sevDesk Part status values.
+STATUS_ACTIVE = 100
+STATUS_INACTIVE = 50
+
 
 class SevDeskError(RuntimeError):
     """Raised when the sevDesk API returns an error response."""
@@ -92,8 +96,12 @@ class SevDeskClient:
         net_price: float,
         gross_price: float,
         tax_rate: float,
+        status: int,
     ) -> None:
-        """Update a sevDesk part's net and gross sales price."""
+        """Update a sevDesk part's net/gross sales price and active status.
+
+        ``status`` is sevDesk's Part status: 100 = active, 50 = inactive.
+        """
         response = self._session.put(
             f"{self._base_url}/Part/{part_id}",
             json={
@@ -101,6 +109,7 @@ class SevDeskClient:
                 "priceNet": round(net_price, 2),
                 "priceGross": round(gross_price, 2),
                 "taxRate": tax_rate,
+                "status": status,
             },
             timeout=self._timeout,
         )
@@ -136,7 +145,7 @@ class SevDeskClient:
                 "taxRate": tax_rate,
                 "unity": {"id": unity_id, "objectName": "Unity"},
                 "stockEnabled": False,
-                "status": 100,
+                "status": STATUS_ACTIVE,
             },
             timeout=self._timeout,
         )

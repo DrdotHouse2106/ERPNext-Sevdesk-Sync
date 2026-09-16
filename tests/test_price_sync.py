@@ -13,8 +13,8 @@ class FakeSevDeskClient:
     def get_parts_by_number(self):
         return {key: dict(value) for key, value in self._parts.items()}
 
-    def update_part_price(self, part_id, *, net_price, gross_price, tax_rate):
-        self.updates.append((part_id, net_price, gross_price, tax_rate))
+    def update_part_price(self, part_id, *, net_price, gross_price, tax_rate, status):
+        self.updates.append((part_id, net_price, gross_price, tax_rate, status))
 
     def create_part(self, *, name, part_number, net_price, gross_price, tax_rate, unity_id):
         self._next_id += 1
@@ -31,8 +31,14 @@ class FakeSevDeskClient:
         return {"id": str(self._next_id)}
 
 
-def erpnext_item(gross_price, item_name="Widget"):
-    return {"item_name": item_name, "gross_price": gross_price}
+def erpnext_item(gross_price, item_name="Widget", disabled=False):
+    return {"item_name": item_name, "gross_price": gross_price, "disabled": disabled}
+
+
+def sevdesk_part(**overrides):
+    part = {"id": "42", "price": 100.0, "taxRate": 19, "status": 100}
+    part.update(overrides)
+    return part
 
 
 class NetToGrossTests(unittest.TestCase):
@@ -46,20 +52,21 @@ class NetToGrossTests(unittest.TestCase):
 class SyncPricesUpdateTests(unittest.TestCase):
     def test_erpnext_price_becomes_sevdesk_net_price(self):
         """100 EUR gross in ERPNext must become 100 EUR *net* in sevDesk (119 EUR gross at 19%)."""
-        sevdesk = FakeSevDeskClient({"ITEM-1": {"id": "42", "price": 90.0, "taxRate": 19}})
+        sevdesk = FakeSevDeskClient({"ITEM-1": sevdesk_part(price=90.0)})
 
         results = sync_prices({"ITEM-1": erpnext_item(100.0)}, sevdesk)
 
         self.assertEqual(len(sevdesk.updates), 1)
-        part_id, net_price, gross_price, tax_rate = sevdesk.updates[0]
+        part_id, net_price, gross_price, tax_rate, status = sevdesk.updates[0]
         self.assertEqual(part_id, "42")
         self.assertAlmostEqual(net_price, 100.0)
         self.assertAlmostEqual(gross_price, 119.0)
         self.assertEqual(tax_rate, 19.0)
+        self.assertEqual(status, 100)
         self.assertEqual(results[0].action, "updated")
 
     def test_skips_already_in_sync_part(self):
-        sevdesk = FakeSevDeskClient({"ITEM-1": {"id": "42", "price": 100.0, "taxRate": 19}})
+        sevdesk = FakeSevDeskClient({"ITEM-1": sevdesk_part(price=100.0)})
 
         results = sync_prices({"ITEM-1": erpnext_item(100.0)}, sevdesk)
 
@@ -67,7 +74,7 @@ class SyncPricesUpdateTests(unittest.TestCase):
         self.assertEqual(results[0].action, "unchanged")
 
     def test_dry_run_does_not_update(self):
-        sevdesk = FakeSevDeskClient({"ITEM-1": {"id": "42", "price": 90.0, "taxRate": 19}})
+        sevdesk = FakeSevDeskClient({"ITEM-1": sevdesk_part(price=90.0)})
 
         results = sync_prices({"ITEM-1": erpnext_item(100.0)}, sevdesk, dry_run=True)
 
@@ -77,7 +84,9 @@ class SyncPricesUpdateTests(unittest.TestCase):
         self.assertAlmostEqual(results[0].gross_price, 119.0)
 
     def test_uses_default_tax_rate_when_part_has_none(self):
-        sevdesk = FakeSevDeskClient({"ITEM-1": {"id": "42", "price": None, "taxRate": None}})
+        sevdesk = FakeSevDeskClient(
+            {"ITEM-1": sevdesk_part(price=None, taxRate=None)}
+        )
 
         results = sync_prices(
             {"ITEM-1": erpnext_item(100.0)}, sevdesk, default_tax_rate=19.0
@@ -88,7 +97,9 @@ class SyncPricesUpdateTests(unittest.TestCase):
         self.assertAlmostEqual(results[0].gross_price, 119.0)
 
     def test_skips_item_without_tax_rate_and_no_default(self):
-        sevdesk = FakeSevDeskClient({"ITEM-1": {"id": "42", "price": None, "taxRate": None}})
+        sevdesk = FakeSevDeskClient(
+            {"ITEM-1": sevdesk_part(price=None, taxRate=None)}
+        )
 
         results = sync_prices({"ITEM-1": erpnext_item(100.0)}, sevdesk)
 
@@ -96,6 +107,57 @@ class SyncPricesUpdateTests(unittest.TestCase):
         self.assertEqual(results[0].action, "skipped")
         self.assertTrue(results[0].reason)
         self.assertEqual(sevdesk.updates, [])
+
+
+class SyncPricesStatusTests(unittest.TestCase):
+    def test_deactivates_part_when_item_disabled(self):
+        sevdesk = FakeSevDeskClient({"ITEM-1": sevdesk_part(price=100.0, status=100)})
+
+        results = sync_prices(
+            {"ITEM-1": erpnext_item(100.0, disabled=True)}, sevdesk
+        )
+
+        self.assertEqual(len(sevdesk.updates), 1)
+        _, _, _, _, status = sevdesk.updates[0]
+        self.assertEqual(status, 50)
+        self.assertEqual(results[0].action, "updated")
+
+    def test_reactivates_part_when_item_enabled_again(self):
+        sevdesk = FakeSevDeskClient({"ITEM-1": sevdesk_part(price=100.0, status=50)})
+
+        results = sync_prices(
+            {"ITEM-1": erpnext_item(100.0, disabled=False)}, sevdesk
+        )
+
+        self.assertEqual(len(sevdesk.updates), 1)
+        _, _, _, _, status = sevdesk.updates[0]
+        self.assertEqual(status, 100)
+        self.assertEqual(results[0].action, "updated")
+
+    def test_disabled_and_already_inactive_stays_unchanged(self):
+        sevdesk = FakeSevDeskClient({"ITEM-1": sevdesk_part(price=100.0, status=50)})
+
+        results = sync_prices(
+            {"ITEM-1": erpnext_item(100.0, disabled=True)}, sevdesk
+        )
+
+        self.assertEqual(sevdesk.updates, [])
+        self.assertEqual(results[0].action, "unchanged")
+
+    def test_skips_creation_for_disabled_item_without_existing_part(self):
+        sevdesk = FakeSevDeskClient({})
+
+        results = sync_prices(
+            {"ITEM-1": erpnext_item(100.0, disabled=True)},
+            sevdesk,
+            default_tax_rate=19.0,
+            default_unity_id="1",
+        )
+
+        self.assertEqual(sevdesk.creates, [])
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].action, "skipped")
+        self.assertTrue(results[0].reason)
 
 
 class SyncPricesCreateTests(unittest.TestCase):

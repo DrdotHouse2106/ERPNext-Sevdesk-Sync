@@ -31,8 +31,14 @@ separaten API-Zugangsdaten für ERPNext nötig.
    dem ERPNext-Preis als Nettopreis und dem daraus berechneten Bruttopreis.
    Dafür müssen `Default Tax Rate` **und** `sevDesk Default Unity ID` (die
    sevDesk-Einheit, z. B. "Stück") in den Einstellungen gesetzt sein — fehlt
-   eines von beiden, wird der Artikel übersprungen (mit Warnung im Log).
-5. Der Sync läuft automatisch **einmal täglich** über Frappes Scheduler
+   eines von beiden, wird der Artikel übersprungen (mit Warnung im Log). Ist
+   der ERPNext-Artikel deaktiviert, wird stattdessen **kein** neuer sevDesk-Artikel
+   angelegt.
+5. **Wird ein ERPNext-Artikel deaktiviert** (Feld „Disabled"), wird der passende
+   sevDesk-Artikel beim nächsten Sync auf inaktiv gesetzt (`status = 50`), ohne
+   ihn zu löschen. Wird er in ERPNext wieder aktiviert, wird der sevDesk-Artikel
+   entsprechend wieder auf aktiv gesetzt (`status = 100`).
+6. Der Sync läuft automatisch **einmal täglich** über Frappes Scheduler
    (`scheduler_events` in `hooks.py`).
 
 ## Installation in ERPNext (bench)

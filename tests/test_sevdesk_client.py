@@ -83,14 +83,22 @@ class SevDeskClientTests(unittest.TestCase):
         session.put.return_value = make_response(status_code=200)
         client = SevDeskClient("https://my.sevdesk.de/api/v1", "token", session=session)
 
-        client.update_part_price("42", net_price=100.004, gross_price=119.0, tax_rate=19)
+        client.update_part_price(
+            "42", net_price=100.004, gross_price=119.0, tax_rate=19, status=100
+        )
 
         session.put.assert_called_once()
         args, kwargs = session.put.call_args
         self.assertEqual(args[0], "https://my.sevdesk.de/api/v1/Part/42")
         self.assertEqual(
             kwargs["json"],
-            {"price": 100.0, "priceNet": 100.0, "priceGross": 119.0, "taxRate": 19},
+            {
+                "price": 100.0,
+                "priceNet": 100.0,
+                "priceGross": 119.0,
+                "taxRate": 19,
+                "status": 100,
+            },
         )
 
     def test_update_part_price_error_response_raises(self):
@@ -99,7 +107,9 @@ class SevDeskClientTests(unittest.TestCase):
         client = SevDeskClient("https://my.sevdesk.de/api/v1", "token", session=session)
 
         with self.assertRaises(SevDeskError):
-            client.update_part_price("42", net_price=100.0, gross_price=119.0, tax_rate=19)
+            client.update_part_price(
+                "42", net_price=100.0, gross_price=119.0, tax_rate=19, status=100
+            )
 
     def test_create_part_sends_expected_payload(self):
         session = MagicMock()

@@ -46,8 +46,16 @@ class GetPriceListItemsTests(unittest.TestCase):
         self.assertEqual(
             items,
             {
-                "ITEM-1": {"item_name": "Widget", "gross_price": 119.0},
-                "ITEM-2": {"item_name": "Gadget", "gross_price": 59.5},
+                "ITEM-1": {
+                    "item_name": "Widget",
+                    "gross_price": 119.0,
+                    "disabled": False,
+                },
+                "ITEM-2": {
+                    "item_name": "Gadget",
+                    "gross_price": 59.5,
+                    "disabled": False,
+                },
             },
         )
 
@@ -92,6 +100,7 @@ class GetPriceListItemsTests(unittest.TestCase):
                         "price_list_rate",
                         "item_code.item_name as item_name",
                         "item_code.item_group as item_group",
+                        "item_code.disabled as disabled",
                     ],
                 )
             ],
@@ -138,6 +147,30 @@ class GetPriceListItemsTests(unittest.TestCase):
         items = get_price_list_items("Standard Selling")
 
         self.assertEqual(set(items), {"ITEM-1"})
+
+    def test_reports_disabled_flag(self):
+        _install_fake_frappe(
+            [
+                {
+                    "item_code": "ITEM-1",
+                    "price_list_rate": 100.0,
+                    "item_name": "A",
+                    "disabled": 1,
+                },
+                {
+                    "item_code": "ITEM-2",
+                    "price_list_rate": 100.0,
+                    "item_name": "B",
+                    "disabled": 0,
+                },
+            ]
+        )
+        from sevdesk_sync.erpnext_source import get_price_list_items
+
+        items = get_price_list_items("Standard Selling")
+
+        self.assertTrue(items["ITEM-1"]["disabled"])
+        self.assertFalse(items["ITEM-2"]["disabled"])
 
 
 if __name__ == "__main__":
