@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-from erpnext_sevdesk_sync.sevdesk_client import SevDeskClient, SevDeskError
+from sevdesk_sync.sevdesk_client import SevDeskClient, SevDeskError
 
 
 def make_response(status_code=200, json_data=None, text=""):

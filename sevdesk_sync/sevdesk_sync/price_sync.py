@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from .erpnext_client import ERPNextClient
 from .sevdesk_client import SevDeskClient
 
 logger = logging.getLogger(__name__)
@@ -31,23 +30,22 @@ def gross_to_net(gross_price: float, tax_rate: float) -> float:
 
 
 def sync_prices(
-    erpnext_client: ERPNextClient,
+    erpnext_prices: Dict[str, float],
     sevdesk_client: SevDeskClient,
     *,
-    price_list: str,
     default_tax_rate: Optional[float] = None,
     dry_run: bool = False,
     price_tolerance: float = DEFAULT_PRICE_TOLERANCE,
 ) -> List[SyncResult]:
     """Sync gross ERPNext prices to sevDesk as net prices.
 
-    Items are matched between the two systems on ERPNext's ``item_code``
-    against sevDesk's ``partNumber``. The tax rate used for the gross-to-net
+    ``erpnext_prices`` maps ERPNext ``item_code`` to its gross price list
+    rate. Items are matched to sevDesk parts on ``item_code`` against
+    sevDesk's ``partNumber``. The tax rate used for the gross-to-net
     conversion is taken from the existing sevDesk part (so it stays
     consistent with how sevDesk itself classifies the part); ``default_tax_rate``
     is only used as a fallback when a part has no tax rate set yet.
     """
-    erpnext_prices = erpnext_client.get_price_list_rates(price_list)
     sevdesk_parts = sevdesk_client.get_parts_by_number()
 
     results: List[SyncResult] = []

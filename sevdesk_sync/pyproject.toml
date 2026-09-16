@@ -1,0 +1,21 @@
+[project]
+name = "sevdesk_sync"
+authors = [
+    { name = "Dr. Dot House", email = "drdothouse@gmail.com" }
+]
+description = "Sync gross prices from ERPNext's standard price list to sevDesk as net prices."
+requires-python = ">=3.10"
+readme = "README.md"
+dynamic = ["version"]
+dependencies = [
+    "requests",
+]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.bench.dev-dependencies]
+
+[tool.flit.module]
+name = "sevdesk_sync"
