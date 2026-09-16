@@ -6,6 +6,7 @@
  "field_order": [
   "enabled",
   "erpnext_price_list",
+  "excluded_item_groups",
   "default_tax_rate",
   "column_break_1",
   "sevdesk_base_url",
@@ -33,6 +34,13 @@
    "label": "ERPNext-Preisliste",
    "options": "Price List",
    "reqd": 1
+  },
+  {
+   "description": "Artikel aus diesen Artikelgruppen werden beim Sync komplett übersprungen (weder aktualisiert noch in sevDesk neu angelegt). Wirkt nicht automatisch auf Unterartikelgruppen – diese bei Bedarf zusätzlich eintragen.",
+   "fieldname": "excluded_item_groups",
+   "fieldtype": "Table MultiSelect",
+   "label": "Ausgeschlossene Artikelgruppen",
+   "options": "SevDesk Sync Excluded Item Group"
   },
   {
    "description": "Wird verwendet, wenn ein sevDesk-Artikel noch keinen Steuersatz hat, sowie immer beim Anlegen neuer Artikel. Leer lassen, um betroffene Artikel zu überspringen.",

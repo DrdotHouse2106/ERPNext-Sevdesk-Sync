@@ -67,7 +67,11 @@ def run_sync(*, force_dry_run: bool = False, persist_settings: bool = True) -> D
     settings = frappe.get_single("SevDesk Sync Settings")
     dry_run = True if force_dry_run else bool(settings.dry_run)
 
-    erpnext_items = get_price_list_items(settings.erpnext_price_list)
+    excluded_item_groups = [row.item_group for row in settings.excluded_item_groups]
+    erpnext_items = get_price_list_items(
+        settings.erpnext_price_list,
+        excluded_item_groups=excluded_item_groups,
+    )
     sevdesk_client = SevDeskClient(
         settings.sevdesk_base_url,
         settings.get_password("sevdesk_api_token"),

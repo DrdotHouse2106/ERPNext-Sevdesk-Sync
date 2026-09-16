@@ -62,6 +62,7 @@ Nach der Installation in ERPNext unter **SevDesk Sync Settings** (Single-DocType
 |--------------------------------------|-------------------------------------------------------------------------------|
 | Synchronisierung aktiv               | Ein/Aus-Schalter für den täglichen automatischen Sync (Default: an). Deaktiviert nur den Scheduler-Lauf, die Buttons unten funktionieren immer |
 | ERPNext-Preisliste                   | Name der zu exportierenden Preisliste (Default: `Standard Selling`)           |
+| Ausgeschlossene Artikelgruppen        | Mehrfachauswahl von ERPNext-Artikelgruppen, deren Artikel komplett vom Sync ausgenommen werden (weder aktualisiert noch in sevDesk neu angelegt). Wirkt nicht automatisch auf Unterartikelgruppen |
 | Standard-Steuersatz (%)              | Steuersatz für Artikel ohne sevDesk-Steuersatz und **Pflichtfeld** für die Neuanlage von Artikeln |
 | sevDesk-API-Basis-URL                | sevDesk-API-Basis-URL (Default: `https://my.sevdesk.de/api/v1`)               |
 | sevDesk-API-Token                    | API-Token aus sevDesk (Einstellungen → Benutzer → API), wird verschlüsselt gespeichert |

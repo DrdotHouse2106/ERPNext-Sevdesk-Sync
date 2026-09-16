@@ -87,10 +87,57 @@ class GetPriceListItemsTests(unittest.TestCase):
                 (
                     "Item Price",
                     {"price_list": "Standard Selling", "selling": 1},
-                    ["item_code", "price_list_rate", "item_code.item_name as item_name"],
+                    [
+                        "item_code",
+                        "price_list_rate",
+                        "item_code.item_name as item_name",
+                        "item_code.item_group as item_group",
+                    ],
                 )
             ],
         )
+
+    def test_excludes_items_in_excluded_item_groups(self):
+        _install_fake_frappe(
+            [
+                {
+                    "item_code": "ITEM-1",
+                    "price_list_rate": 100.0,
+                    "item_name": "A",
+                    "item_group": "Rohstoffe",
+                },
+                {
+                    "item_code": "ITEM-2",
+                    "price_list_rate": 50.0,
+                    "item_name": "B",
+                    "item_group": "Verkaufsartikel",
+                },
+            ]
+        )
+        from sevdesk_sync.erpnext_source import get_price_list_items
+
+        items = get_price_list_items(
+            "Standard Selling", excluded_item_groups=["Rohstoffe"]
+        )
+
+        self.assertEqual(set(items), {"ITEM-2"})
+
+    def test_no_exclusion_when_not_configured(self):
+        _install_fake_frappe(
+            [
+                {
+                    "item_code": "ITEM-1",
+                    "price_list_rate": 100.0,
+                    "item_name": "A",
+                    "item_group": "Rohstoffe",
+                }
+            ]
+        )
+        from sevdesk_sync.erpnext_source import get_price_list_items
+
+        items = get_price_list_items("Standard Selling")
+
+        self.assertEqual(set(items), {"ITEM-1"})
 
 
 if __name__ == "__main__":
