@@ -34,6 +34,22 @@ class SevDeskClient:
             }
         )
 
+    def test_connection(self) -> None:
+        """Perform a lightweight authenticated request to verify the base URL and token.
+
+        Raises SevDeskError if the credentials or URL are invalid.
+        """
+        response = self._session.get(
+            f"{self._base_url}/Part",
+            params={"limit": 1},
+            timeout=self._timeout,
+        )
+        if response.status_code != 200:
+            raise SevDeskError(
+                f"sevDesk connection test failed with status {response.status_code}: "
+                f"{response.text}"
+            )
+
     def get_parts_by_number(self) -> Dict[str, Dict[str, Any]]:
         """Return ``{partNumber: part}`` for all sevDesk parts that have a part number.
 

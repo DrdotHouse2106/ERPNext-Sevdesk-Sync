@@ -13,6 +13,25 @@ def make_response(status_code=200, json_data=None, text=""):
 
 
 class SevDeskClientTests(unittest.TestCase):
+    def test_test_connection_succeeds_on_200(self):
+        session = MagicMock()
+        session.get.return_value = make_response(status_code=200, json_data={"objects": []})
+        client = SevDeskClient("https://my.sevdesk.de/api/v1", "token", session=session)
+
+        client.test_connection()
+
+        args, kwargs = session.get.call_args
+        self.assertEqual(args[0], "https://my.sevdesk.de/api/v1/Part")
+        self.assertEqual(kwargs["params"], {"limit": 1})
+
+    def test_test_connection_raises_on_error(self):
+        session = MagicMock()
+        session.get.return_value = make_response(status_code=401, text="unauthorized")
+        client = SevDeskClient("https://my.sevdesk.de/api/v1", "token", session=session)
+
+        with self.assertRaises(SevDeskError):
+            client.test_connection()
+
     def test_get_parts_by_number_single_page(self):
         session = MagicMock()
         session.get.return_value = make_response(

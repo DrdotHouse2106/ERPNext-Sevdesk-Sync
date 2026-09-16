@@ -58,27 +58,35 @@ bench --site <site-name> migrate
 Nach der Installation in ERPNext unter **SevDesk Sync Settings** (Single-DocType)
 öffnen und ausfüllen:
 
-| Feld                     | Beschreibung                                                                 |
-|---------------------------|-------------------------------------------------------------------------------|
-| ERPNext Price List        | Name der zu exportierenden Preisliste (Default: `Standard Selling`)           |
-| Default Tax Rate (%)      | Steuersatz für Artikel ohne sevDesk-Steuersatz und **Pflichtfeld** für die Neuanlage von Artikeln |
-| sevDesk API Base URL      | sevDesk-API-Basis-URL (Default: `https://my.sevdesk.de/api/v1`)               |
-| sevDesk API Token         | API-Token aus sevDesk (Einstellungen → Benutzer → API), wird verschlüsselt gespeichert |
-| sevDesk Default Unity ID  | sevDesk-Einheit (z. B. "Stück") für neu anzulegende Artikel; **Pflichtfeld** für die Neuanlage von Artikeln, zu finden unter sevDesk → Einstellungen → Stammdaten → Einheiten oder via `GET /Unity` |
-| Dry Run                   | Wenn aktiviert, wird nur simuliert/geloggt, nichts in sevDesk geschrieben oder angelegt |
-| Last Sync On / Summary    | Read-only, wird nach jedem Lauf automatisch aktualisiert                     |
+| Feld                                | Beschreibung                                                                 |
+|--------------------------------------|-------------------------------------------------------------------------------|
+| Synchronisierung aktiv               | Ein/Aus-Schalter für den täglichen automatischen Sync (Default: an). Deaktiviert nur den Scheduler-Lauf, die Buttons unten funktionieren immer |
+| ERPNext-Preisliste                   | Name der zu exportierenden Preisliste (Default: `Standard Selling`)           |
+| Standard-Steuersatz (%)              | Steuersatz für Artikel ohne sevDesk-Steuersatz und **Pflichtfeld** für die Neuanlage von Artikeln |
+| sevDesk-API-Basis-URL                | sevDesk-API-Basis-URL (Default: `https://my.sevdesk.de/api/v1`)               |
+| sevDesk-API-Token                    | API-Token aus sevDesk (Einstellungen → Benutzer → API), wird verschlüsselt gespeichert |
+| sevDesk-Standardeinheit (ID)         | sevDesk-Einheit (z. B. "Stück") für neu anzulegende Artikel; **Pflichtfeld** für die Neuanlage von Artikeln, zu finden unter sevDesk → Einstellungen → Stammdaten → Einheiten oder via `GET /Unity` |
+| Trockenlauf                          | Wenn aktiviert, wird bei jedem Sync (auch dem geplanten) nur simuliert/geloggt, nichts in sevDesk geschrieben oder angelegt |
+| Letzte Synchronisierung am / Zusammenfassung | Read-only, wird nach jedem echten Lauf automatisch aktualisiert (nicht beim manuellen Trockenlauf-Button) |
+
+Oben auf der Settings-Seite gibt es zwei Buttons:
+
+- **Verbindung testen** — prüft, ob sevDesk-API-Basis-URL und Token funktionieren, ohne etwas zu ändern.
+- **Trockenlauf starten** — führt den Sync sofort im Trockenlauf-Modus aus (unabhängig vom Trockenlauf-Häkchen) und zeigt das Ergebnis direkt an.
 
 ## Nutzung
 
-Der Sync läuft automatisch täglich über den Frappe-Scheduler. Ein manueller Lauf
-ist über die Bench-Console möglich:
+Der Sync läuft automatisch täglich über den Frappe-Scheduler, sofern „Synchronisierung
+aktiv" angehakt ist. Ein manueller Lauf ist auch über die Bench-Console möglich:
 
 ```bash
-bench --site <site-name> execute sevdesk_sync.tasks.run_sync
+bench --site <site-name> execute sevdesk_sync.tasks.run_sync_now
 ```
 
-Oder, mit Berechtigungsprüfung, als whitelisted Methode (z. B. über die
-Frappe-API oder `bench --site <site-name> execute sevdesk_sync.tasks.run_sync_now`).
+`run_sync_now` respektiert dabei das „Trockenlauf"-Häkchen aus den Settings; für einen
+erzwungenen Trockenlauf unabhängig davon gibt es `sevdesk_sync.tasks.run_dry_run` (das,
+was auch der „Trockenlauf starten"-Button aufruft) sowie `sevdesk_sync.tasks.test_connection`
+für den reinen Verbindungstest.
 
 ## Tests
 
