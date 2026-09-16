@@ -70,7 +70,8 @@ class SevDeskClientTests(unittest.TestCase):
         args, kwargs = session.put.call_args
         self.assertEqual(args[0], "https://my.sevdesk.de/api/v1/Part/42")
         self.assertEqual(
-            kwargs["json"], {"price": 100.0, "priceGross": 119.0, "taxRate": 19}
+            kwargs["json"],
+            {"price": 100.0, "priceNet": 100.0, "priceGross": 119.0, "taxRate": 19},
         )
 
     def test_update_part_price_error_response_raises(self):
@@ -107,6 +108,7 @@ class SevDeskClientTests(unittest.TestCase):
                 "name": "Widget",
                 "partNumber": "ITEM-1",
                 "price": 100.0,
+                "priceNet": 100.0,
                 "priceGross": 119.0,
                 "taxRate": 19,
                 "unity": {"id": "1", "objectName": "Unity"},

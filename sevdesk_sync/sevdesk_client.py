@@ -82,6 +82,7 @@ class SevDeskClient:
             f"{self._base_url}/Part/{part_id}",
             json={
                 "price": round(net_price, 2),
+                "priceNet": round(net_price, 2),
                 "priceGross": round(gross_price, 2),
                 "taxRate": tax_rate,
             },
@@ -114,6 +115,7 @@ class SevDeskClient:
                 "name": name,
                 "partNumber": part_number,
                 "price": round(net_price, 2),
+                "priceNet": round(net_price, 2),
                 "priceGross": round(gross_price, 2),
                 "taxRate": tax_rate,
                 "unity": {"id": unity_id, "objectName": "Unity"},
