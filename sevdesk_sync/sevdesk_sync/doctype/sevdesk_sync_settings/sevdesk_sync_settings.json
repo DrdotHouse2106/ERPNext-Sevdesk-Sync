@@ -7,6 +7,7 @@
   "enabled",
   "erpnext_price_list",
   "excluded_item_groups",
+  "sync_only_if_field_filled",
   "default_tax_rate",
   "column_break_1",
   "sevdesk_base_url",
@@ -41,6 +42,12 @@
    "fieldtype": "Table MultiSelect",
    "label": "Ausgeschlossene Artikelgruppen",
    "options": "SevDesk Sync Excluded Item Group"
+  },
+  {
+   "description": "Technischer Feldname eines Artikel-Felds in ERPNext (z. B. eines Custom Fields wie \"geeignet_fuer_a_typ\"). Ist das gesetzt, werden nur Artikel synct, bei denen dieses Feld einen Wert hat – alle anderen werden komplett übersprungen. Leer lassen, um alle Artikel der Preisliste zu syncen. Den technischen Feldnamen findest du unter Einstellungen → Customize Form → Item → Feld anklicken → \"Field Name\".",
+   "fieldname": "sync_only_if_field_filled",
+   "fieldtype": "Data",
+   "label": "Nur syncen, wenn Feld befüllt ist (Feldname)"
   },
   {
    "description": "Wird verwendet, wenn ein sevDesk-Artikel noch keinen Steuersatz hat, sowie immer beim Anlegen neuer Artikel. Leer lassen, um betroffene Artikel zu überspringen.",

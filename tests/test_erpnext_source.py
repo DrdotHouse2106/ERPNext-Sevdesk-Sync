@@ -172,6 +172,60 @@ class GetPriceListItemsTests(unittest.TestCase):
         self.assertTrue(items["ITEM-1"]["disabled"])
         self.assertFalse(items["ITEM-2"]["disabled"])
 
+    def test_required_field_appends_column_and_filters(self):
+        fake = _install_fake_frappe(
+            [
+                {
+                    "item_code": "ITEM-1",
+                    "price_list_rate": 100.0,
+                    "item_name": "A",
+                    "required_field_value": "X",
+                },
+                {
+                    "item_code": "ITEM-2",
+                    "price_list_rate": 100.0,
+                    "item_name": "B",
+                    "required_field_value": None,
+                },
+                {
+                    "item_code": "ITEM-3",
+                    "price_list_rate": 100.0,
+                    "item_name": "C",
+                    "required_field_value": "",
+                },
+            ]
+        )
+        from sevdesk_sync.erpnext_source import get_price_list_items
+
+        items = get_price_list_items(
+            "Standard Selling", required_field="geeignet_fuer_a_typ"
+        )
+
+        self.assertEqual(set(items), {"ITEM-1"})
+        self.assertIn(
+            "item_code.geeignet_fuer_a_typ as required_field_value",
+            fake.calls[0][2],
+        )
+
+    def test_no_filtering_when_required_field_not_configured(self):
+        _install_fake_frappe(
+            [{"item_code": "ITEM-1", "price_list_rate": 100.0, "item_name": "A"}]
+        )
+        from sevdesk_sync.erpnext_source import get_price_list_items
+
+        items = get_price_list_items("Standard Selling")
+
+        self.assertEqual(set(items), {"ITEM-1"})
+
+    def test_rejects_unsafe_required_field_name(self):
+        _install_fake_frappe([])
+        from sevdesk_sync.erpnext_source import get_price_list_items
+
+        with self.assertRaises(ValueError):
+            get_price_list_items(
+                "Standard Selling", required_field="foo; DROP TABLE `tabItem`"
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

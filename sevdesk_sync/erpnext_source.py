@@ -6,14 +6,21 @@ Frappe ORM instead of an external REST call.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, Iterable, Optional
 
 import frappe
+
+#: Frappe fieldnames are snake_case identifiers; this guards the dynamic
+#: ``required_field`` against being interpolated into anything but a plain
+#: column reference.
+_FIELDNAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 
 
 def get_price_list_items(
     price_list: str,
     excluded_item_groups: Optional[Iterable[str]] = None,
+    required_field: Optional[str] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """Return ``{item_code: {"item_name": ..., "gross_price": ..., "disabled": ...}}``.
 
@@ -26,17 +33,30 @@ def get_price_list_items(
 
     Items whose Item Group (exact match, not including sub-groups) is in
     ``excluded_item_groups`` are left out entirely.
+
+    If ``required_field`` (an Item fieldname, e.g. a custom field) is given,
+    only items where that field has a truthy value are included; items where
+    it is empty are left out entirely, same as an excluded item group.
     """
+    fields = [
+        "item_code",
+        "price_list_rate",
+        "item_code.item_name as item_name",
+        "item_code.item_group as item_group",
+        "item_code.disabled as disabled",
+    ]
+    if required_field:
+        if not _FIELDNAME_RE.match(required_field):
+            raise ValueError(
+                f"Invalid Item fieldname for 'Nur syncen, wenn Feld befüllt ist': "
+                f"{required_field!r}"
+            )
+        fields.append(f"item_code.{required_field} as required_field_value")
+
     rows = frappe.get_all(
         "Item Price",
         filters={"price_list": price_list, "selling": 1},
-        fields=[
-            "item_code",
-            "price_list_rate",
-            "item_code.item_name as item_name",
-            "item_code.item_group as item_group",
-            "item_code.disabled as disabled",
-        ],
+        fields=fields,
     )
 
     excluded = set(excluded_item_groups or [])
@@ -48,6 +68,8 @@ def get_price_list_items(
         if not item_code or rate is None:
             continue
         if excluded and row.get("item_group") in excluded:
+            continue
+        if required_field and not row.get("required_field_value"):
             continue
         items[item_code] = {
             "item_name": row.get("item_name") or item_code,

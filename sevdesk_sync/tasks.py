@@ -71,6 +71,7 @@ def run_sync(*, force_dry_run: bool = False, persist_settings: bool = True) -> D
     erpnext_items = get_price_list_items(
         settings.erpnext_price_list,
         excluded_item_groups=excluded_item_groups,
+        required_field=settings.sync_only_if_field_filled or None,
     )
     sevdesk_client = SevDeskClient(
         settings.sevdesk_base_url,
