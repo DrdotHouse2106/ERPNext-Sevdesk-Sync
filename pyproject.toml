@@ -17,5 +17,8 @@ build-backend = "flit_core.buildapi"
 
 [tool.bench.dev-dependencies]
 
+[tool.bench.frappe-dependencies]
+frappe = ">=14.0.0"
+
 [tool.flit.module]
 name = "sevdesk_sync"
