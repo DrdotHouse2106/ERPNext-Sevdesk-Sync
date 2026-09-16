@@ -27,43 +27,59 @@ def _install_fake_frappe(rows):
     return fake
 
 
-class GetPriceListRatesTests(unittest.TestCase):
+class GetPriceListItemsTests(unittest.TestCase):
     def tearDown(self):
         sys.modules.pop("frappe", None)
         sys.modules.pop("sevdesk_sync.erpnext_source", None)
 
-    def test_returns_item_code_to_rate_mapping(self):
+    def test_returns_item_code_to_item_mapping(self):
         _install_fake_frappe(
             [
-                {"item_code": "ITEM-1", "price_list_rate": 119.0},
-                {"item_code": "ITEM-2", "price_list_rate": 59.5},
+                {"item_code": "ITEM-1", "price_list_rate": 119.0, "item_name": "Widget"},
+                {"item_code": "ITEM-2", "price_list_rate": 59.5, "item_name": "Gadget"},
             ]
         )
-        from sevdesk_sync.erpnext_source import get_price_list_rates
+        from sevdesk_sync.erpnext_source import get_price_list_items
 
-        prices = get_price_list_rates("Standard Selling")
+        items = get_price_list_items("Standard Selling")
 
-        self.assertEqual(prices, {"ITEM-1": 119.0, "ITEM-2": 59.5})
+        self.assertEqual(
+            items,
+            {
+                "ITEM-1": {"item_name": "Widget", "gross_price": 119.0},
+                "ITEM-2": {"item_name": "Gadget", "gross_price": 59.5},
+            },
+        )
+
+    def test_falls_back_to_item_code_when_name_missing(self):
+        _install_fake_frappe(
+            [{"item_code": "ITEM-1", "price_list_rate": 119.0, "item_name": None}]
+        )
+        from sevdesk_sync.erpnext_source import get_price_list_items
+
+        items = get_price_list_items("Standard Selling")
+
+        self.assertEqual(items["ITEM-1"]["item_name"], "ITEM-1")
 
     def test_filters_incomplete_rows(self):
         _install_fake_frappe(
             [
-                {"item_code": "ITEM-1", "price_list_rate": None},
-                {"item_code": None, "price_list_rate": 5.0},
-                {"item_code": "ITEM-2", "price_list_rate": 5.0},
+                {"item_code": "ITEM-1", "price_list_rate": None, "item_name": "X"},
+                {"item_code": None, "price_list_rate": 5.0, "item_name": "Y"},
+                {"item_code": "ITEM-2", "price_list_rate": 5.0, "item_name": "Z"},
             ]
         )
-        from sevdesk_sync.erpnext_source import get_price_list_rates
+        from sevdesk_sync.erpnext_source import get_price_list_items
 
-        prices = get_price_list_rates("Standard Selling")
+        items = get_price_list_items("Standard Selling")
 
-        self.assertEqual(prices, {"ITEM-2": 5.0})
+        self.assertEqual(set(items), {"ITEM-2"})
 
     def test_passes_expected_filters(self):
         fake = _install_fake_frappe([])
-        from sevdesk_sync.erpnext_source import get_price_list_rates
+        from sevdesk_sync.erpnext_source import get_price_list_items
 
-        get_price_list_rates("Standard Selling")
+        get_price_list_items("Standard Selling")
 
         self.assertEqual(
             fake.calls,
@@ -71,7 +87,7 @@ class GetPriceListRatesTests(unittest.TestCase):
                 (
                     "Item Price",
                     {"price_list": "Standard Selling", "selling": 1},
-                    ["item_code", "price_list_rate"],
+                    ["item_code", "price_list_rate", "item_code.item_name as item_name"],
                 )
             ],
         )

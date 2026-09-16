@@ -5,7 +5,7 @@ from __future__ import annotations
 import frappe
 from frappe.utils import now_datetime
 
-from .erpnext_source import get_price_list_rates
+from .erpnext_source import get_price_list_items
 from .price_sync import sync_prices
 from .sevdesk_client import SevDeskClient
 
@@ -25,23 +25,25 @@ def run_sync_now() -> str:
 def run_sync() -> str:
     settings = frappe.get_single("SevDesk Sync Settings")
 
-    erpnext_prices = get_price_list_rates(settings.erpnext_price_list)
+    erpnext_items = get_price_list_items(settings.erpnext_price_list)
     sevdesk_client = SevDeskClient(
         settings.sevdesk_base_url,
         settings.get_password("sevdesk_api_token"),
     )
 
     results = sync_prices(
-        erpnext_prices,
+        erpnext_items,
         sevdesk_client,
         default_tax_rate=settings.default_tax_rate or None,
+        default_unity_id=settings.sevdesk_default_unity_id or None,
         dry_run=bool(settings.dry_run),
     )
 
-    updated = sum(1 for result in results if result.updated)
-    unchanged = len(results) - updated
+    created = sum(1 for result in results if result.action == "created")
+    updated = sum(1 for result in results if result.action == "updated")
+    unchanged = sum(1 for result in results if result.action == "unchanged")
     summary = (
-        f"{updated} updated, {unchanged} already in sync"
+        f"{created} created, {updated} updated, {unchanged} already in sync"
         f"{' (dry-run)' if settings.dry_run else ''}"
     )
 

@@ -81,6 +81,55 @@ class SevDeskClientTests(unittest.TestCase):
         with self.assertRaises(SevDeskError):
             client.update_part_price("42", net_price=100.0, gross_price=119.0, tax_rate=19)
 
+    def test_create_part_sends_expected_payload(self):
+        session = MagicMock()
+        session.post.return_value = make_response(
+            status_code=201, json_data={"objects": {"id": "99"}}
+        )
+        client = SevDeskClient("https://my.sevdesk.de/api/v1", "token", session=session)
+
+        result = client.create_part(
+            name="Widget",
+            part_number="ITEM-1",
+            net_price=100.0,
+            gross_price=119.0,
+            tax_rate=19,
+            unity_id="1",
+        )
+
+        self.assertEqual(result, {"id": "99"})
+        session.post.assert_called_once()
+        args, kwargs = session.post.call_args
+        self.assertEqual(args[0], "https://my.sevdesk.de/api/v1/Part")
+        self.assertEqual(
+            kwargs["json"],
+            {
+                "name": "Widget",
+                "partNumber": "ITEM-1",
+                "price": 100.0,
+                "priceGross": 119.0,
+                "taxRate": 19,
+                "unity": {"id": "1", "objectName": "Unity"},
+                "stockEnabled": False,
+                "status": 100,
+            },
+        )
+
+    def test_create_part_error_response_raises(self):
+        session = MagicMock()
+        session.post.return_value = make_response(status_code=400, text="bad request")
+        client = SevDeskClient("https://my.sevdesk.de/api/v1", "token", session=session)
+
+        with self.assertRaises(SevDeskError):
+            client.create_part(
+                name="Widget",
+                part_number="ITEM-1",
+                net_price=100.0,
+                gross_price=119.0,
+                tax_rate=19,
+                unity_id="1",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -92,3 +92,39 @@ class SevDeskClient:
                 f"sevDesk update for part {part_id} failed with status "
                 f"{response.status_code}: {response.text}"
             )
+
+    def create_part(
+        self,
+        *,
+        name: str,
+        part_number: str,
+        net_price: float,
+        gross_price: float,
+        tax_rate: float,
+        unity_id: str,
+    ) -> Dict[str, Any]:
+        """Create a new sevDesk part (Artikel) and return the created object.
+
+        ``unity_id`` is the sevDesk id of a unit of measurement (Einheit,
+        e.g. "Stück"); sevDesk requires every part to have one.
+        """
+        response = self._session.post(
+            f"{self._base_url}/Part",
+            json={
+                "name": name,
+                "partNumber": part_number,
+                "price": round(net_price, 2),
+                "priceGross": round(gross_price, 2),
+                "taxRate": tax_rate,
+                "unity": {"id": unity_id, "objectName": "Unity"},
+                "stockEnabled": False,
+                "status": 100,
+            },
+            timeout=self._timeout,
+        )
+        if response.status_code not in (200, 201):
+            raise SevDeskError(
+                f"sevDesk create for part {part_number!r} failed with status "
+                f"{response.status_code}: {response.text}"
+            )
+        return response.json().get("objects", {})

@@ -9,6 +9,7 @@
   "column_break_1",
   "sevdesk_base_url",
   "sevdesk_api_token",
+  "sevdesk_default_unity_id",
   "section_break_1",
   "dry_run",
   "column_break_2",
@@ -18,7 +19,7 @@
  "fields": [
   {
    "default": "Standard Selling",
-   "description": "Selling price list whose gross prices are exported to sevDesk.",
+   "description": "Selling price list whose price (used directly as the sevDesk net price) is exported to sevDesk.",
    "fieldname": "erpnext_price_list",
    "fieldtype": "Link",
    "label": "ERPNext Price List",
@@ -26,7 +27,7 @@
    "reqd": 1
   },
   {
-   "description": "Used only when a sevDesk part has no tax rate set yet. Leave empty to skip such parts.",
+   "description": "Used when a sevDesk part has no tax rate set yet, and always when creating a new part. Leave empty to skip items that would need it.",
    "fieldname": "default_tax_rate",
    "fieldtype": "Float",
    "label": "Default Tax Rate (%)",
@@ -48,6 +49,12 @@
    "fieldtype": "Password",
    "label": "sevDesk API Token",
    "reqd": 1
+  },
+  {
+   "description": "sevDesk id of the unit of measurement (Einheit, e.g. \"Stück\") used when creating new parts. Find it under sevDesk → Einstellungen → Stammdaten → Einheiten, or via GET /Unity. Required to auto-create missing parts.",
+   "fieldname": "sevdesk_default_unity_id",
+   "fieldtype": "Data",
+   "label": "sevDesk Default Unity ID"
   },
   {
    "fieldname": "section_break_1",

@@ -6,24 +6,34 @@ Frappe ORM instead of an external REST call.
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Any, Dict
 
 import frappe
 
 
-def get_price_list_rates(price_list: str) -> Dict[str, float]:
-    """Return ``{item_code: price_list_rate}`` for the given selling price list.
+def get_price_list_items(price_list: str) -> Dict[str, Dict[str, Any]]:
+    """Return ``{item_code: {"item_name": ..., "gross_price": ...}}``.
 
-    The rates are assumed to be gross (VAT-included) prices, as is common for
-    a "Standard Selling" price list aimed at end-customer invoices.
+    ``gross_price`` is the Item Price ``price_list_rate`` for the given
+    selling price list, assumed to include VAT (gross), as is common for a
+    "Standard Selling" price list aimed at end-customer invoices.
+    ``item_name`` is included for parts that still need to be created in
+    sevDesk.
     """
     rows = frappe.get_all(
         "Item Price",
         filters={"price_list": price_list, "selling": 1},
-        fields=["item_code", "price_list_rate"],
+        fields=["item_code", "price_list_rate", "item_code.item_name as item_name"],
     )
-    return {
-        row.get("item_code"): float(row.get("price_list_rate"))
-        for row in rows
-        if row.get("item_code") and row.get("price_list_rate") is not None
-    }
+
+    items: Dict[str, Dict[str, Any]] = {}
+    for row in rows:
+        item_code = row.get("item_code")
+        rate = row.get("price_list_rate")
+        if not item_code or rate is None:
+            continue
+        items[item_code] = {
+            "item_name": row.get("item_name") or item_code,
+            "gross_price": float(rate),
+        }
+    return items
