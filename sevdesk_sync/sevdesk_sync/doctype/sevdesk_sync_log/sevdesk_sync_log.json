@@ -12,6 +12,7 @@
   "updated_count",
   "unchanged_count",
   "skipped_count",
+  "error_count",
   "summary"
  ],
  "fields": [
@@ -63,6 +64,14 @@
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Übersprungen",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "error_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Fehlgeschlagen",
    "read_only": 1
   },
   {

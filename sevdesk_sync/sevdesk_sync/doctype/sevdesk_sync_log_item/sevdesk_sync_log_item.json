@@ -39,7 +39,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Aktion",
-   "options": "Angelegt\nAktualisiert\nÜbersprungen",
+   "options": "Angelegt\nAktualisiert\nÜbersprungen\nFehler",
    "read_only": 1
   },
   {
@@ -70,8 +70,8 @@
   },
   {
    "fieldname": "reason",
-   "fieldtype": "Data",
-   "label": "Grund (bei Übersprungen)",
+   "fieldtype": "Small Text",
+   "label": "Grund / Fehlermeldung",
    "read_only": 1
   }
  ],

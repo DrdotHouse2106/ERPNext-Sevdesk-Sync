@@ -74,7 +74,7 @@
    "reqd": 1
   },
   {
-   "description": "sevDesk-ID der Einheit (z. B. „Stück\"), die beim Anlegen neuer Artikel verwendet wird. Zu finden unter sevDesk → Einstellungen → Stammdaten → Einheiten oder über GET /Unity. Erforderlich, um fehlende Artikel automatisch anzulegen.",
+   "description": "Die numerische sevDesk-ID der Einheit (z. B. \"1\" für „Stk\"), NICHT der Name der Einheit. Zu finden unter sevDesk → Einstellungen → Stammdaten → Einheiten oder über GET /Unity. Erforderlich, um fehlende Artikel automatisch anzulegen.",
    "fieldname": "sevdesk_default_unity_id",
    "fieldtype": "Data",
    "label": "sevDesk-Standardeinheit (ID)"

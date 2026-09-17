@@ -16,7 +16,7 @@ import dataclasses
 import logging
 from typing import Any, Dict, List, Optional
 
-from .sevdesk_client import STATUS_ACTIVE, STATUS_INACTIVE, SevDeskClient
+from .sevdesk_client import STATUS_ACTIVE, STATUS_INACTIVE, SevDeskClient, SevDeskError
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,8 @@ class SyncResult:
     net_price: Optional[float]
     gross_price: Optional[float]
     tax_rate: Optional[float]
-    action: str  # "created", "updated", "unchanged", or "skipped"
-    reason: str = ""  # set (in German, for display) when action == "skipped"
+    action: str  # "created", "updated", "unchanged", "skipped", or "error"
+    reason: str = ""  # set (in German, for display) when action is "skipped" or "error"
 
 
 def net_to_gross(net_price: float, tax_rate: float) -> float:
@@ -69,8 +69,10 @@ def sync_prices(
       without creating one.
 
     Every ERPNext item produces exactly one ``SyncResult``, including skipped
-    ones (with ``action="skipped"`` and a human-readable ``reason``), so
-    callers can build a full report of a run.
+    ones (with ``action="skipped"`` and a human-readable ``reason``). If the
+    sevDesk API rejects an individual create/update call, that item gets
+    ``action="error"`` with the sevDesk error message as ``reason`` instead
+    of aborting the whole run - one bad item never stops the rest.
     """
     sevdesk_parts = sevdesk_client.get_parts_by_number()
 
@@ -137,13 +139,27 @@ def sync_prices(
                     target_status,
                 )
             else:
-                sevdesk_client.update_part_price(
-                    part["id"],
-                    net_price=net_price,
-                    gross_price=gross_price,
-                    tax_rate=tax_rate,
-                    status=target_status,
-                )
+                try:
+                    sevdesk_client.update_part_price(
+                        part["id"],
+                        net_price=net_price,
+                        gross_price=gross_price,
+                        tax_rate=tax_rate,
+                        status=target_status,
+                    )
+                except SevDeskError as exc:
+                    logger.error("Failed to update %s: %s", item_code, exc)
+                    results.append(
+                        SyncResult(
+                            item_code,
+                            net_price,
+                            gross_price,
+                            tax_rate,
+                            "error",
+                            reason=f"sevDesk-Fehler beim Aktualisieren: {exc}",
+                        )
+                    )
+                    continue
                 logger.info(
                     "Updated %s: net -> %.2f (gross %.2f, tax %.2f%%, status -> %s)",
                     item_code,
@@ -229,14 +245,28 @@ def sync_prices(
                 tax_rate,
             )
         else:
-            sevdesk_client.create_part(
-                name=item.get("item_name") or item_code,
-                part_number=item_code,
-                net_price=net_price,
-                gross_price=gross_price,
-                tax_rate=tax_rate,
-                unity_id=default_unity_id,
-            )
+            try:
+                sevdesk_client.create_part(
+                    name=item.get("item_name") or item_code,
+                    part_number=item_code,
+                    net_price=net_price,
+                    gross_price=gross_price,
+                    tax_rate=tax_rate,
+                    unity_id=default_unity_id,
+                )
+            except SevDeskError as exc:
+                logger.error("Failed to create %s: %s", item_code, exc)
+                results.append(
+                    SyncResult(
+                        item_code,
+                        net_price,
+                        gross_price,
+                        tax_rate,
+                        "error",
+                        reason=f"sevDesk-Fehler beim Anlegen: {exc}",
+                    )
+                )
+                continue
             logger.info(
                 "Created %s: net %.2f (gross %.2f, tax %.2f%%)",
                 item_code,
@@ -246,12 +276,16 @@ def sync_prices(
             )
         results.append(SyncResult(item_code, net_price, gross_price, tax_rate, "created"))
 
-    skipped_count = sum(1 for result in results if result.action == "skipped")
-    if skipped_count:
+    problem_count = sum(1 for result in results if result.action in ("skipped", "error"))
+    if problem_count:
         logger.warning(
-            "%d ERPNext item(s) skipped (see warnings above): %s",
-            skipped_count,
-            ", ".join(sorted(r.item_code for r in results if r.action == "skipped")),
+            "%d ERPNext item(s) skipped or failed (see warnings above): %s",
+            problem_count,
+            ", ".join(
+                sorted(
+                    r.item_code for r in results if r.action in ("skipped", "error")
+                )
+            ),
         )
 
     return results

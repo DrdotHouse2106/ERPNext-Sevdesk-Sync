@@ -73,7 +73,7 @@ Nach der Installation in ERPNext unter **SevDesk Sync Settings** (Single-DocType
 | Standard-Steuersatz (%)              | Steuersatz für Artikel ohne sevDesk-Steuersatz und **Pflichtfeld** für die Neuanlage von Artikeln |
 | sevDesk-API-Basis-URL                | sevDesk-API-Basis-URL (Default: `https://my.sevdesk.de/api/v1`)               |
 | sevDesk-API-Token                    | API-Token aus sevDesk (Einstellungen → Benutzer → API), wird verschlüsselt gespeichert |
-| sevDesk-Standardeinheit (ID)         | sevDesk-Einheit (z. B. "Stück") für neu anzulegende Artikel; **Pflichtfeld** für die Neuanlage von Artikeln, zu finden unter sevDesk → Einstellungen → Stammdaten → Einheiten oder via `GET /Unity` |
+| sevDesk-Standardeinheit (ID)         | Die **numerische** sevDesk-ID der Einheit (z. B. `1` für „Stk"/„Stück"), NICHT der Name der Einheit, für neu anzulegende Artikel; **Pflichtfeld** für die Neuanlage von Artikeln. Zu finden unter sevDesk → Einstellungen → Stammdaten → Einheiten oder via `GET /Unity` |
 | Trockenlauf                          | Wenn aktiviert, wird bei jedem Sync (auch dem geplanten) nur simuliert/geloggt, nichts in sevDesk geschrieben oder angelegt |
 | Letzte Synchronisierung am / Zusammenfassung | Read-only, wird nach jedem echten Lauf automatisch aktualisiert (nicht beim manuellen Trockenlauf-Button) |
 
@@ -98,13 +98,19 @@ für unterschiedliche Situationen gedacht und schließen sich nicht aus.
 
 Jeder Lauf (geplant, Trockenlauf oder manuell über „Jetzt synchronisieren") erzeugt
 einen Eintrag im DocType **SevDesk Sync Log** mit Zeitpunkt, Zähler
-(angelegt/aktualisiert/bereits synchron/übersprungen) und Zusammenfassung. Über den
-Link „Details ansehen" bzw. direkt in ERPNext gelangt man zu den zugehörigen
-**SevDesk Sync Log Item**-Zeilen — einer Zeile pro angelegtem, aktualisiertem oder
-übersprungenem (mit Grund) Artikel. Das ist eine normale ERPNext-Listenansicht:
-filter-, sortier- und exportierbar (z. B. nach Excel). Artikel, die bereits synchron
-waren, werden dort nicht einzeln aufgeführt (nur als Zähler im Log-Kopf), um die
-Tabelle bei großen Katalogen nicht unnötig aufzublähen.
+(angelegt/aktualisiert/bereits synchron/übersprungen/fehlgeschlagen) und
+Zusammenfassung. Über den Link „Details ansehen" bzw. direkt in ERPNext gelangt man
+zu den zugehörigen **SevDesk Sync Log Item**-Zeilen — einer Zeile pro angelegtem,
+aktualisiertem, übersprungenem oder fehlgeschlagenem (jeweils mit Grund/Fehlermeldung)
+Artikel. Das ist eine normale ERPNext-Listenansicht: filter-, sortier- und exportierbar
+(z. B. nach Excel). Artikel, die bereits synchron waren, werden dort nicht einzeln
+aufgeführt (nur als Zähler im Log-Kopf), um die Tabelle bei großen Katalogen nicht
+unnötig aufzublähen.
+
+**Fehlertoleranz:** Schlägt der sevDesk-API-Aufruf für einen einzelnen Artikel fehl
+(z. B. ungültige ID, vorübergehender API-Fehler), wird das als `Fehler` im Log erfasst
+und der Lauf läuft für alle übrigen Artikel normal weiter — ein einzelner
+fehlerhafter Artikel bricht nicht mehr den gesamten Sync ab.
 
 ## Nutzung
 

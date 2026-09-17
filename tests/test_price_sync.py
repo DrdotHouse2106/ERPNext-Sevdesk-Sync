@@ -1,22 +1,29 @@
 import unittest
 
 from sevdesk_sync.price_sync import net_to_gross, sync_prices
+from sevdesk_sync.sevdesk_client import SevDeskError
 
 
 class FakeSevDeskClient:
-    def __init__(self, parts):
+    def __init__(self, parts, fail_update=False, fail_create=False):
         self._parts = parts
         self.updates = []
         self.creates = []
         self._next_id = 1000
+        self._fail_update = fail_update
+        self._fail_create = fail_create
 
     def get_parts_by_number(self):
         return {key: dict(value) for key, value in self._parts.items()}
 
     def update_part_price(self, part_id, *, net_price, gross_price, tax_rate, status):
+        if self._fail_update:
+            raise SevDeskError("sevDesk update failed with status 400: Invalid id given")
         self.updates.append((part_id, net_price, gross_price, tax_rate, status))
 
     def create_part(self, *, name, part_number, net_price, gross_price, tax_rate, unity_id):
+        if self._fail_create:
+            raise SevDeskError("sevDesk create failed with status 400: Invalid id given")
         self._next_id += 1
         self.creates.append(
             {
@@ -158,6 +165,50 @@ class SyncPricesStatusTests(unittest.TestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].action, "skipped")
         self.assertTrue(results[0].reason)
+
+
+class SyncPricesErrorHandlingTests(unittest.TestCase):
+    def test_update_failure_is_recorded_and_does_not_abort_the_run(self):
+        sevdesk = FakeSevDeskClient(
+            {
+                "ITEM-1": sevdesk_part(price=90.0),
+                "ITEM-2": sevdesk_part(price=90.0),
+            },
+            fail_update=True,
+        )
+
+        results = sync_prices(
+            {
+                "ITEM-1": erpnext_item(100.0),
+                "ITEM-2": erpnext_item(100.0),
+            },
+            sevdesk,
+        )
+
+        self.assertEqual(sevdesk.updates, [])
+        self.assertEqual(len(results), 2)
+        for result in results:
+            self.assertEqual(result.action, "error")
+            self.assertIn("Invalid id given", result.reason)
+
+    def test_create_failure_is_recorded_and_does_not_abort_the_run(self):
+        sevdesk = FakeSevDeskClient({}, fail_create=True)
+
+        results = sync_prices(
+            {
+                "ITEM-1": erpnext_item(100.0),
+                "ITEM-2": erpnext_item(100.0),
+            },
+            sevdesk,
+            default_tax_rate=19.0,
+            default_unity_id="Stück",
+        )
+
+        self.assertEqual(sevdesk.creates, [])
+        self.assertEqual(len(results), 2)
+        for result in results:
+            self.assertEqual(result.action, "error")
+            self.assertIn("Invalid id given", result.reason)
 
 
 class SyncPricesCreateTests(unittest.TestCase):

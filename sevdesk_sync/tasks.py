@@ -17,6 +17,7 @@ _ACTION_LABELS = {
     "created": "Angelegt",
     "updated": "Aktualisiert",
     "skipped": "Übersprungen",
+    "error": "Fehler",
 }
 
 
@@ -90,11 +91,13 @@ def run_sync(*, force_dry_run: bool = False, persist_settings: bool = True) -> D
     updated = [r for r in results if r.action == "updated"]
     unchanged = [r for r in results if r.action == "unchanged"]
     skipped = [r for r in results if r.action == "skipped"]
+    errors = [r for r in results if r.action == "error"]
 
     summary = (
         f"{len(created)} angelegt, {len(updated)} aktualisiert, "
         f"{len(unchanged)} bereits synchron"
         f"{f', {len(skipped)} übersprungen' if skipped else ''}"
+        f"{f', {len(errors)} fehlgeschlagen' if errors else ''}"
         f"{' (Trockenlauf)' if dry_run else ''}"
     )
 
@@ -103,8 +106,8 @@ def run_sync(*, force_dry_run: bool = False, persist_settings: bool = True) -> D
         sync_time=sync_time,
         dry_run=dry_run,
         summary=summary,
-        counts=(len(created), len(updated), len(unchanged), len(skipped)),
-        items=[*created, *updated, *skipped],
+        counts=(len(created), len(updated), len(unchanged), len(skipped), len(errors)),
+        items=[*created, *updated, *skipped, *errors],
     )
 
     if persist_settings:
@@ -129,7 +132,7 @@ def _save_sync_log(
     single run can touch thousands of items and this is a plain audit trail,
     not data that needs controller validation.
     """
-    created_count, updated_count, unchanged_count, skipped_count = counts
+    created_count, updated_count, unchanged_count, skipped_count, error_count = counts
 
     log = frappe.get_doc(
         {
@@ -140,6 +143,7 @@ def _save_sync_log(
             "updated_count": updated_count,
             "unchanged_count": unchanged_count,
             "skipped_count": skipped_count,
+            "error_count": error_count,
             "summary": summary,
         }
     )
