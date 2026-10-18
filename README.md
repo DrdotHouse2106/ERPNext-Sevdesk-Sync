@@ -138,3 +138,9 @@ python3 -m unittest discover -s tests -v
 
 `sevdesk_sync_settings.py` (die DocType-Controller-Klasse) benötigt hingegen eine
 echte Bench-/Site-Umgebung und wird nicht durch diese Tests abgedeckt.
+
+## Unterstützen
+
+Wenn dir dieses Projekt weiterhilft, freue ich mich über eine kleine Spende:
+
+[![Spenden via PayPal](https://img.shields.io/badge/Spenden-PayPal-0070ba?logo=paypal&logoColor=white)](https://paypal.me/DrdotHouse)
