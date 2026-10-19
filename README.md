@@ -1,5 +1,7 @@
 # ERPNext-Sevdesk-Sync
 
+[![Spendier mir einen Kaffee](https://img.shields.io/badge/☕_Spendier_mir_einen_Kaffee-PayPal-0070ba?style=for-the-badge&logo=paypal&logoColor=white)](https://paypal.me/DrdotHouse)
+
 Kleine, spezifische ERPNext-App: überträgt den Preis der Standard-Preisliste aus
 ERPNext (dort als Bruttopreis geführt) unverändert als **Nettopreis** nach sevDesk.
 Das heißt konkret: ERPNext 100 € (Brutto-Feld) → sevDesk 100 € **netto**, sevDesk
