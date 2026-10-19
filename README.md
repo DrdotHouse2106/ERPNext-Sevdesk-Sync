@@ -146,3 +146,19 @@ echte Bench-/Site-Umgebung und wird nicht durch diese Tests abgedeckt.
 Wenn dir dieses Projekt weiterhilft, freue ich mich über eine kleine Spende:
 
 [![Spenden via PayPal](https://img.shields.io/badge/Spenden-PayPal-0070ba?logo=paypal&logoColor=white)](https://paypal.me/DrdotHouse)
+
+### Für Unternehmen: Unterstützung für die Weiterentwicklung
+
+Ihr setzt das Projekt im Betrieb ein und möchtet die Weiterentwicklung unterstützen? Gern auch
+**mit Rechnung** – einmalig oder **monatlich**. Auf Wunsch nenne ich euch hier unter
+„Unterstützer“ mit Firmenname und Link.
+
+Bitte beachtet: Ich bin kein Profi-Entwickler, das Projekt ist mein Hobby. Eine Unterstützung
+ist deshalb kein Supportvertrag – Support, Reaktionszeiten oder Gewährleistung kann ich nicht
+anbieten. Wünsche und Verbesserungsvorschläge nehme ich aber gerne mit auf.
+
+Kontakt: [info@francetec.de](mailto:info@francetec.de)
+
+#### Unterstützer
+
+*Noch keine – über euren Namen hier würde ich mich freuen.*
